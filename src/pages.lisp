@@ -115,7 +115,7 @@
       (:footer
 	(:nav (dolist(pathname (append updated ignored))
 		(cl-who:htm ((:p :class "archive")
-			     ((:a :href (princ-to-string(archives pathname)))
+			     ((:a :href (enough-namestring(archives pathname)))
 			      (princ(pathname-name pathname)))
 			     (princ (Date(file-write-date pathname)))
 			     (when(find pathname updated :test #'equal)
