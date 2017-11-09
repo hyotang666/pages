@@ -48,7 +48,7 @@
   (With-html-compiler (:body "Hello world.")))
 
 (defun footer(archives)
-  (With-html-compiler (:footer((:a :href archives)"Archives"))))
+  (With-html-compiler (:footer((:a :href archives)"Index"))))
 
 (defun body(&key(main (constantly ""))(footer (constantly "")))
   (With-html-compiler (:body (funcall main)
@@ -92,19 +92,17 @@
 	      (funcall (compiler pathname))))
 	  )
     (mapc #'%COMPILE targets)
-    (With-output-to("archives.html")
-      (funcall(archives-updater targets ignored)))
     (With-output-to("index.html")
-      (funcall(index-updater(car targets))))))
+      (funcall(archives-updater targets ignored)))))
 
 (defun compiler(pathname)
   (html :title (pathname-name pathname)
 	:style-sheet(style-sheet "../css/css.css")
 	:body (body :main (funcall *compiler* pathname)
-		    :footer (footer "../archives.html"))))
+		    :footer (footer "../index.html"))))
 
 (defun archives-updater(updated ignored)
-  (html :title "archives"
+  (html :title "Index"
 	:body(archives-body updated ignored)))
 
 (dynamic-package:control
@@ -114,17 +112,12 @@
     (:body
       (:footer
 	(:nav (dolist(pathname (append updated ignored))
-		(cl-who:htm ((:p :class "archive")
+		(cl-who:htm ((:p :class "index")
 			     ((:a :href (enough-namestring(archives pathname)))
 			      (princ(pathname-name pathname)))
 			     (princ (Date(file-write-date pathname)))
 			     (when(find pathname updated :test #'equal)
 			       (princ " updated!"))))))))))
-
-(defun index-updater(pathname)
-  (html :title "Index"
-	:body(body :main(funcall *compiler* pathname)
-		   :footer (footer "archives.html"))))
 
 (defun style-sheet(path)
   (With-html-compiler (:link :rel "stylesheet" :href path :type "text/css")))
