@@ -70,10 +70,10 @@
 (defun should-be-updated(date)
   (mapc #'ensure-directories-exist '("src/" "archives/" "img/"))
   (flet((SORT-BY-STAMP(list)
-	  (sort list (complement #'uiop:stamp<) :key #'file-write-date))
+	  (sort list (complement #'uiop:timestamp<) :key #'file-write-date))
 	)
     (loop :for pathname :in (Collect-file "src/" *pattern*)
-	  :when (or (uiop:stamp< date (uiop:safe-file-write-date pathname))
+	  :when (or (uiop:timestamp< date (uiop:safe-file-write-date pathname))
 		    (not(probe-file(archives pathname))))
 	  :collect pathname :into targets
 	  :else :collect pathname :into ignored
