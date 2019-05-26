@@ -113,7 +113,7 @@
       (:footer
 	(:nav (dolist(pathname (append updated ignored))
 		(cl-who:htm ((:p :class "index")
-			     ((:a :href (enough-namestring(archives pathname)))
+			     ((:a :href (enough-namestring(archives pathname)(uiop:getcwd)))
 			      (princ(pathname-name pathname)))
 			     (princ (Date(file-write-date pathname)))
 			     (when(find pathname updated :test #'equal)
