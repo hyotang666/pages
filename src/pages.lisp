@@ -1,3 +1,66 @@
+(in-package :cl-user)
+
+(defpackage :pages (:use :cl)
+  (:shadow compile)
+  (:export))
+
+(in-package :pages)
+
+(defmacro with-output-to((pathname)&body body)
+  `(WITH-OPEN-FILE(*STANDARD-OUTPUT* ,pathname
+				     :DIRECTION :OUTPUT
+				     :IF-DOES-NOT-EXIST :CREATE
+				     :IF-EXISTS :SUPERSEDE)
+     ,@body))
+
+(defun collect-file(directory pattern)
+  (uiop:directory-files (merge-pathnames directory (uiop:getcwd))
+			pattern))
+
+(defmacro with-html-compiler(&body body)
+  `(LAMBDA()
+     (CL-WHO:WITH-HTML-OUTPUT(*STANDARD-OUTPUT* NIL :INDENT T)
+       ,@body)
+     (VALUES)))
+
+(defun date(time)
+  (multiple-value-bind(s m h day month year)(decode-universal-time time)
+    (declare(ignore s m h))
+    (format nil "~D/~D/~D"year month day)))
+
+(defun compile-css()
+  (ensure-directories-exist "css/")
+  (with-output-to("css/css.css")
+    (funcall #'css-thunk)))
+
+(defun css-thunk()
+  (princ (cl-css:css `((h1 :padding 5% :border-bottom #:solid
+			   :text-align #:center)
+		       (h2 :padding 20px :background-color #:ghostwhite)
+		       (body :padding-left 7% :padding-right 7%)
+		       ;; Codes
+		       (pre :padding 10px :background-color #:whitesmoke)
+		       (code :color #:rebeccapurple)
+		       ;; Tables
+		       (table :background-color #:azure)
+		       ("tbody tr:nth-of-type(odd)" :background-color #:aqua)
+		       (,(format nil "~{~A~^,~}"'(td th))
+			 :padding 10px)
+		       ;; archives
+		       (.archive :border #:solid :border-width #:thin
+				 :padding 10px :border-color #:gray)
+		       ;; footer
+		       (footer :border-top #:solid :border-width #:thin)
+		       )))
+  (values))
+
+(defun markdown(pathname)
+  (lambda()
+    (let((3bmd-code-blocks:*code-blocks* T)
+	 (3bmd-tables:*tables* T)
+	 (3bmd:*smart-quotes* T))
+      (3bmd:parse-and-print-to-stream pathname *standard-output*))))
+
 (defvar *author*)
 
 (defun author()
@@ -7,12 +70,6 @@
 (defvar *compiler*)
 (defvar *pattern*)
 
-(dynamic-package:control
-  (:import-from :pages.markdown #:markdown)
-  (:import-from :pages.css #:compile-css)
-  (:import-from :pages.util #:with-output-to)
-  (:shadow #:compile)
-  (:export #:compile))
 (defun compile(&key ((:author *author*)(author))
 		    ((:pattern *pattern*)"*.md")
 		    ((:compiler *compiler*)#'Markdown)
@@ -42,8 +99,6 @@
 	(funcall body)))
     (values)))
 
-(dynamic-package:control
-  (:import-from :pages.util #:with-html-compiler))
 (defun initial-body()
   (With-html-compiler (:body "Hello world.")))
 
@@ -65,8 +120,6 @@
     (when targets
       (%%update targets ignored))))
 
-(dynamic-package:control
-  (:import-from :pages.util #:collect-file))
 (defun should-be-updated(date)
   (mapc #'ensure-directories-exist '("src/" "archives/" "img/"))
   (flet((SORT-BY-STAMP(list)
@@ -105,8 +158,6 @@
   (html :title "Index"
 	:body(archives-body updated ignored)))
 
-(dynamic-package:control
-  (:shadowing-import-from :pages.util #:date))
 (defun archives-body(updated ignored)
   (With-html-compiler
     (:body
