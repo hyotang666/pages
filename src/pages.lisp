@@ -59,7 +59,7 @@
         ("tbody tr:nth-of-type(odd)" :background-color #:aqua)
         (,(format nil "~{~A~^,~}" '(td th)) :padding 10px)
         ;; archives
-        (. archive :border #:solid :border-width #:thin :padding 10px
+        (.archive :border #:solid :border-width #:thin :padding 10px
          :border-color #:gray)
         ;; footer
         (footer :border-top #:solid :border-width #:thin))))

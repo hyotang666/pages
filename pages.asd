@@ -2,7 +2,7 @@
 (in-package :asdf)
 
 (defsystem "pages"
-  :version "0.1.5"
+  :version "0.1.6"
   :pathname "src"
   :depends-on
   ("cl-who" "3bmd" "3bmd-ext-code-blocks" "3bmd-ext-tables" "cl-css")
