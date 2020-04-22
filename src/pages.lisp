@@ -7,6 +7,14 @@
 
 (in-package :pages)
 
+;;;; SPECIAL VARIABLES
+
+(defvar *author*)
+
+(defvar *compiler*)
+
+(defvar *pattern*)
+
 (defmacro with-output-to ((pathname) &body body)
   `(with-open-file (*standard-output* ,pathname :direction :output
                     :if-does-not-exist :create
@@ -60,15 +68,9 @@
           (3bmd:*smart-quotes* t))
       (3bmd:parse-and-print-to-stream pathname *standard-output*))))
 
-(defvar *author*)
-
 (defun author ()
   (let ((namestring (car (last (pathname-directory (uiop:getcwd))))))
     (subseq namestring 0 (position #\. namestring))))
-
-(defvar *compiler*)
-
-(defvar *pattern*)
 
 (defun compile
        (
