@@ -1,7 +1,7 @@
 (in-package :cl-user)
 
 (defpackage :pages
-  (:use :cl)
+  (:use :cl :htmf)
   (:shadow compile)
   (:export))
 
@@ -22,7 +22,6 @@
     (subseq namestring 0 (position #\. namestring))))
 
 ;;;; COMPILER
-
 ;;; MARKDOWN
 
 (defun markdown (pathname)
@@ -30,7 +29,8 @@
     (let ((3bmd-code-blocks:*code-blocks* t)
           (3bmd-tables:*tables* t)
           (3bmd:*smart-quotes* t))
-      (3bmd:parse-and-print-to-stream pathname *standard-output*))))
+      (with-output-to-string (out)
+        (3bmd:parse-and-print-to-stream pathname out)))))
 
 ;;; CSS
 
@@ -68,12 +68,6 @@
 (defun collect-file (directory pattern)
   (uiop:directory-files (merge-pathnames directory (uiop:getcwd)) pattern))
 
-(defmacro with-html-compiler (&body body)
-  `(lambda ()
-     (cl-who:with-html-output (*standard-output* nil :indent t)
-       ,@body)
-     (values)))
-
 (defun date (time)
   (multiple-value-bind (s m h day month year)
       (decode-universal-time time)
@@ -92,33 +86,21 @@
        (if (probe-file "index.html")
            (update)
            (with-output-to ("index.html")
-             (funcall (html :title "index")))))))
+             (funcall (template :title "index")))))))
 
-(defun html
+(defun template
        (
-        &key (title "") ((:author *author*) (author)) (body #'initial-body)
+        &key (title "") ((:author *author*) (author))
+        (body (body () "Hello world."))
         (style-sheet (style-sheet "css/css.css")))
-  (lambda ()
-    (cl-who:with-html-output (*standard-output* nil :prologue t :indent t)
-      (:html
-       (:head (:title (princ title))
-        (:meta :http-equiv "content-type" :content "text/html; charset=UTF-8")
-        (:meta :name "auhtor" :content *author*)
-        (:meta :name "generator" :content "pages") (funcall style-sheet))
-       (funcall body)))
-    (values)))
-
-(defun initial-body ()
-  (with-html-compiler
-    (:body "Hello world.")))
-
-(defun footer (archives)
-  (with-html-compiler
-    (:footer ((:a :href archives) "Index"))))
-
-(defun body (&key (main (constantly "")) (footer (constantly "")))
-  (with-html-compiler
-    (:body (funcall main) (funcall footer))))
+  (html ()
+    (head ()
+      (title title)
+      (meta :http-equiv "content-type" :charset "UTF-8")
+      (meta :name "auhtor" :content *author*)
+      (meta :name "generator" :content "pages")
+      (funcall style-sheet))
+    body))
 
 (defun update ()
   (let ((date (uiop:safe-file-write-date "index.html")))
@@ -161,28 +143,26 @@
       (funcall (archives-updater targets ignored)))))
 
 (defun compiler (pathname)
-  (html :title (pathname-name pathname)
-        :style-sheet (style-sheet "../css/css.css")
-        :body (body :main (funcall *compiler* pathname)
-                    :footer (footer "../index.html"))))
+  (template :title (pathname-name pathname)
+            :style-sheet (style-sheet "../css/css.css")
+            :body (body ()
+                    (main () (funcall *compiler* pathname))
+                    (footer () (a (list :href "../index.html") "Index")))))
 
 (defun archives-updater (updated ignored)
-  (html :title "Index" :body (archives-body updated ignored)))
+  (template :title "Index" :body (archives-body updated ignored)))
 
 (defun archives-body (updated ignored)
-  (with-html-compiler
-    (:body
-     (:footer
-      (:nav
-       (dolist (pathname (append updated ignored))
-         (cl-who:htm
-          ((:p :class "index")
-           ((:a :href (enough-namestring (archives pathname) (uiop:getcwd)))
-            (princ (pathname-name pathname)))
-           (princ (date (file-write-date pathname)))
-           (when (find pathname updated :test #'equal)
-             (princ " updated!"))))))))))
+  (body ()
+    (footer ()
+      (nav ()
+        (loop :for pathname :in (append updated ignored)
+              :collect (p '(:class "index")
+                         (a (list :href (enough-namestring (archives pathname)
+                                                           (uiop:getcwd)))
+                           (pathname-name pathname))
+                         (date (file-write-date pathname))
+                         (when (find pathname updated :test #'equal)
+                           " updated!")))))))
 
-(defun style-sheet (path)
-  (with-html-compiler
-    (:link :rel "stylesheet" :href path :type "text/css")))
+(defun style-sheet (path) (link :rel "stylesheet" :href path :type "text/css"))
