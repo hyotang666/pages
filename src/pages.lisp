@@ -25,12 +25,11 @@
 ;;; MARKDOWN
 
 (defun markdown (pathname)
-  (lambda ()
-    (let ((3bmd-code-blocks:*code-blocks* t)
-          (3bmd-tables:*tables* t)
-          (3bmd:*smart-quotes* t))
-      (with-output-to-string (out)
-        (3bmd:parse-and-print-to-stream pathname out)))))
+  (let ((3bmd-code-blocks:*code-blocks* t)
+        (3bmd-tables:*tables* t)
+        (3bmd:*smart-quotes* t))
+    (with-output-to-string (out)
+      (3bmd:parse-and-print-to-stream pathname out))))
 
 ;;; CSS
 
