@@ -15,6 +15,12 @@
 
 (defvar *pattern*)
 
+;;;; AUTHOR
+
+(defun author ()
+  (let ((namestring (car (last (pathname-directory (uiop:getcwd))))))
+    (subseq namestring 0 (position #\. namestring))))
+
 (defmacro with-output-to ((pathname) &body body)
   `(with-open-file (*standard-output* ,pathname :direction :output
                     :if-does-not-exist :create
@@ -67,10 +73,6 @@
           (3bmd-tables:*tables* t)
           (3bmd:*smart-quotes* t))
       (3bmd:parse-and-print-to-stream pathname *standard-output*))))
-
-(defun author ()
-  (let ((namestring (car (last (pathname-directory (uiop:getcwd))))))
-    (subseq namestring 0 (position #\. namestring))))
 
 (defun compile
        (
