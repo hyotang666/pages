@@ -23,6 +23,8 @@
 
 ;;;; COMPILER
 
+;;; MARKDOWN
+
 (defun markdown (pathname)
   (lambda ()
     (let ((3bmd-code-blocks:*code-blocks* t)
@@ -30,26 +32,13 @@
           (3bmd:*smart-quotes* t))
       (3bmd:parse-and-print-to-stream pathname *standard-output*))))
 
+;;; CSS
+
 (defmacro with-output-to ((pathname) &body body)
   `(with-open-file (*standard-output* ,pathname :direction :output
                     :if-does-not-exist :create
                     :if-exists :supersede)
      ,@body))
-
-(defun collect-file (directory pattern)
-  (uiop:directory-files (merge-pathnames directory (uiop:getcwd)) pattern))
-
-(defmacro with-html-compiler (&body body)
-  `(lambda ()
-     (cl-who:with-html-output (*standard-output* nil :indent t)
-       ,@body)
-     (values)))
-
-(defun date (time)
-  (multiple-value-bind (s m h day month year)
-      (decode-universal-time time)
-    (declare (ignore s m h))
-    (format nil "~D/~D/~D" year month day)))
 
 (defun compile-css ()
   (ensure-directories-exist "css/")
@@ -75,6 +64,21 @@
         ;; footer
         (footer :border-top #:solid :border-width #:thin))))
   (values))
+
+(defun collect-file (directory pattern)
+  (uiop:directory-files (merge-pathnames directory (uiop:getcwd)) pattern))
+
+(defmacro with-html-compiler (&body body)
+  `(lambda ()
+     (cl-who:with-html-output (*standard-output* nil :indent t)
+       ,@body)
+     (values)))
+
+(defun date (time)
+  (multiple-value-bind (s m h day month year)
+      (decode-universal-time time)
+    (declare (ignore s m h))
+    (format nil "~D/~D/~D" year month day)))
 
 (defun compile
        (
