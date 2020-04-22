@@ -38,32 +38,30 @@
   `(with-open-file (*standard-output* ,pathname :direction :output
                     :if-does-not-exist :create
                     :if-exists :supersede)
-     ,@body))
+     (write-string ,@body)))
 
 (defun compile-css ()
   (ensure-directories-exist "css/")
   (with-output-to ("css/css.css")
-    (funcall #'css-thunk)))
+    (css-thunk)))
 
 (defun css-thunk ()
-  (princ
-    (cl-css:css
-      `((h1 :padding 5% :border-bottom #:solid :text-align #:center)
-        (h2 :padding 20px :background-color #:ghostwhite)
-        (body :padding-left 7% :padding-right 7%)
-        ;; Codes
-        (pre :padding 10px :background-color #:whitesmoke)
-        (code :color #:rebeccapurple)
-        ;; Tables
-        (table :background-color #:azure)
-        ("tbody tr:nth-of-type(odd)" :background-color #:aqua)
-        (,(format nil "~{~A~^,~}" '(td th)) :padding 10px)
-        ;; archives
-        (.archive :border #:solid :border-width #:thin :padding 10px
-         :border-color #:gray)
-        ;; footer
-        (footer :border-top #:solid :border-width #:thin))))
-  (values))
+  (cl-css:css
+    `((h1 :padding 5% :border-bottom #:solid :text-align #:center)
+      (h2 :padding 20px :background-color #:ghostwhite)
+      (body :padding-left 7% :padding-right 7%)
+      ;; Codes
+      (pre :padding 10px :background-color #:whitesmoke)
+      (code :color #:rebeccapurple)
+      ;; Tables
+      (table :background-color #:azure)
+      ("tbody tr:nth-of-type(odd)" :background-color #:aqua)
+      (,(format nil "~{~A~^,~}" '(td th)) :padding 10px)
+      ;; archives
+      (.archive :border #:solid :border-width #:thin :padding 10px
+       :border-color #:gray)
+      ;; footer
+      (footer :border-top #:solid :border-width #:thin))))
 
 (defun collect-file (directory pattern)
   (uiop:directory-files (merge-pathnames directory (uiop:getcwd)) pattern))
@@ -86,21 +84,21 @@
        (if (probe-file "index.html")
            (update)
            (with-output-to ("index.html")
-             (funcall (template :title "index")))))))
+             (template :title "index"))))))
 
 (defun template
        (
         &key (title "") ((:author *author*) (author))
         (body (body () "Hello world."))
         (style-sheet (style-sheet "css/css.css")))
-  (html ()
-    (head ()
-      (title title)
-      (meta :http-equiv "content-type" :charset "UTF-8")
-      (meta :name "auhtor" :content *author*)
-      (meta :name "generator" :content "pages")
-      (funcall style-sheet))
-    body))
+  (html5 nil
+         (head ()
+           (title () title)
+           (meta :charset "UTF-8")
+           (meta :name "auhtor" :content *author*)
+           (meta :name "generator" :content "pages")
+           style-sheet)
+         body))
 
 (defun update ()
   (let ((date (uiop:safe-file-write-date "index.html")))
@@ -137,10 +135,10 @@
 (defun %%update (targets ignored)
   (labels ((%compile (pathname)
              (with-output-to ((archives pathname))
-               (funcall (compiler pathname)))))
+               (compiler pathname))))
     (mapc #'%compile targets)
     (with-output-to ("index.html")
-      (funcall (archives-updater targets ignored)))))
+      (archives-updater targets ignored))))
 
 (defun compiler (pathname)
   (template :title (pathname-name pathname)
