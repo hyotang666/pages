@@ -102,15 +102,11 @@
 
 (defun update ()
   (let ((date (uiop:safe-file-write-date "index.html")))
-    (if date
-        (%update date)
-        (error "No index.html in curret directory.~&~S" (uiop:getcwd)))))
-
-(defun %update (date)
-  (multiple-value-bind (targets ignored)
-      (should-be-updated date)
-    (when targets
-      (%%update targets ignored))))
+    (assert date () "No index.html in curret directory.~&~S" (uiop:getcwd))
+    (multiple-value-bind (targets ignored)
+        (should-be-updated date)
+      (when targets
+        (%%update targets ignored)))))
 
 (defun should-be-updated (date)
   (mapc #'ensure-directories-exist '("src/" "archives/" "img/"))
