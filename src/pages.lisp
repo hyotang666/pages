@@ -135,8 +135,21 @@
              (with-output-to ((archives pathname))
                (compiler pathname))))
     (mapc #'%compile targets)
-    (with-output-to ("index.html")
-      (archives-updater targets ignored))))
+    (loop :for number :upfrom 0
+          :for contents
+               :on (nconc
+                    (mapcar (lambda (pathname) (index-link pathname t))
+                            targets)
+                    (mapcar #'index-link ignored))
+               :by #'(lambda (list) (nthcdr *max-contents* list))
+          :with count := (length contents)
+          :do (with-output-to ((format nil "index~:[~D~;~].html" (zerop number)
+                                       number))
+                (archives-updater
+                 (loop :for content :in contents
+                       :repeat *max-contents*
+                       :collect content)
+                 count number)))))
 
 (defun page-nav (count page)
   (flet ((list-item (page label)
