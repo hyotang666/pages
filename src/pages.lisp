@@ -175,7 +175,7 @@
           :and :do (loop-finish)))
 
 (defun index-link (pathname &optional updated)
-  (let* ((dom (plump:parse (funcall (markdown pathname)))))
+  (let* ((dom (plump:parse (funcall (funcall *compiler* pathname)))))
     (li ()
       (div ()
         (header ()
