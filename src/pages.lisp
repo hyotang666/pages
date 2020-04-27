@@ -15,6 +15,8 @@
 
 (defvar *pattern*)
 
+(defparameter *max-contents* 8)
+
 ;;;; AUTHOR
 
 (defun author ()
@@ -135,6 +137,33 @@
     (mapc #'%compile targets)
     (with-output-to ("index.html")
       (archives-updater targets ignored))))
+
+(defun page-nav (count page)
+  (flet ((list-item (page label)
+           (li '(:class "page-item")
+               (a
+                 (list :href (format nil "index~D.html" page)
+                       :class "page-link")
+                 label)))
+         (max-page (page)
+           (min 5
+                (multiple-value-bind (num rem)
+                    (floor (- count (* *max-contents* page)) *max-contents*)
+                  (if (zerop rem)
+                      (1- num)
+                      num)))))
+    (let ((*optional-attributes* '(:aria-label)))
+      (unless (<= count *max-contents*)
+        (nav '(:aria-label "Pagination.")
+             (ul '(:class "pagination")
+                 (loop :for i :upfrom (1+ page)
+                       :repeat (max-page page)
+                       :collect (list-item i i) :into as
+                       :finally (return
+                                 (if (zerop page)
+                                     as
+                                     (cons (list-item (1- page) "<")
+                                           as))))))))))
 
 (defun compiler (pathname)
   (template :title (pathname-name pathname)
