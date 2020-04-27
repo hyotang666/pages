@@ -169,14 +169,9 @@
                     (main () (funcall *compiler* pathname))
                     (footer () (a (list :href "../index.html") "Index")))))
 
-(defun archives-updater (updated ignored)
+(defun archives-updater (contents count page)
   (template :title "Index"
-            :body (body ()
-                    (ul ()
-                      (nconc
-                        (mapcar (lambda (pathname) (index-link pathname t))
-                                updated)
-                        (mapcar #'index-link ignored))))))
+            :body (body () (ul () contents) (page-nav count page))))
 
 (defun lines-truncate (lines max)
   (check-type max (integer 3 *))
