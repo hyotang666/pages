@@ -53,7 +53,7 @@
       (h2 :padding 20px :background-color #:ghostwhite)
       (body :padding-left 7% :padding-right 7%)
       ;; Codes
-      (pre :padding 10px :background-color #:whitesmoke)
+      (pre :padding 10px :background-color #:whitesmoke :overflow #:auto)
       (code :color #:rebeccapurple)
       ;; Tables
       (table :background-color #:azure)
