@@ -181,4 +181,32 @@
                      temp)
           :and :do (loop-finish)))
 
+(defun index-link (pathname &optional updated)
+  (let* ((dom (plump:parse (funcall (markdown pathname)))))
+    (li ()
+      (div ()
+        (header ()
+          (h2 ()
+            (a (list :href (enough-namestring (archives pathname)))
+              (plump:text (elt (clss:select "h1" dom) 0)))))
+        (main ()
+          (p ()
+            (lines-truncate
+              (loop :for element
+                         :across (remove-if
+                                   (lambda (element)
+                                     (or (plump:comment-p element)
+                                         (plump:text-node-p element)))
+                                   (plump:children dom))
+                    :for firstp := t :then nil :when (not firstp)
+                    :nconc (remove ""
+                                   (uiop:split-string (plump:text element)
+                                                      :separator #.(string
+                                                                     #\Newline))))
+              64)))
+        (footer ()
+          (date (file-write-date pathname))
+          (when updated
+            " Updated!"))))))
+
 (defun style-sheet (path) (link :rel "stylesheet" :href path :type "text/css"))
