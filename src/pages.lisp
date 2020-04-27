@@ -144,13 +144,13 @@
                     (footer () (a (list :href "../index.html") "Index")))))
 
 (defun archives-updater (updated ignored)
-  (template :title "Index" :body (archives-body updated ignored)))
-
-(defun archives-body (updated ignored)
-  (body ()
-    (ul ()
-      (mapcar (lambda (pathname) (index-link pathname t)) updated)
-      (mapcar #'index-link ignored))))
+  (template :title "Index"
+            :body (body ()
+                    (ul ()
+                      (nconc
+                        (mapcar (lambda (pathname) (index-link pathname t))
+                                updated)
+                        (mapcar #'index-link ignored))))))
 
 (defun lines-truncate (lines max)
   (check-type max (integer 3 *))
