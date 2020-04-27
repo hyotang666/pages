@@ -99,6 +99,7 @@
            (meta :charset "UTF-8")
            (meta :name "auhtor" :content *author*)
            (meta :name "generator" :content "pages")
+           (style () colorize:*coloring-css*)
            style-sheet)
          body))
 
