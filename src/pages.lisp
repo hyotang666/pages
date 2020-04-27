@@ -159,4 +159,26 @@
                          (when (find pathname updated :test #'equal)
                            " updated!")))))))
 
+(defun lines-truncate (lines max)
+  (check-type max (integer 3 *))
+  (loop :for line :in lines
+        :for length := (length line)
+        :for count := length :then (+ count length)
+        :if (= count max)
+          :collect line
+          :and :do (loop-finish)
+        :else :if (< count max)
+          :collect line
+          :and :collect (br)
+        :else :if (<= (- max (- count length)) 3)
+          :collect "..."
+          :and :do (loop-finish)
+        :else
+          :collect (let ((temp
+                          (make-string (- max (- count length))
+                                       :initial-element #\.)))
+                     (replace temp line :end2 (- max (- count length) 3))
+                     temp)
+          :and :do (loop-finish)))
+
 (defun style-sheet (path) (link :rel "stylesheet" :href path :type "text/css"))
