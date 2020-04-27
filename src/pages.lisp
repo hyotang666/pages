@@ -90,7 +90,7 @@
 
 (defun template
        (
-        &key (title "") ((:author *author*) (author))
+        &key (title "") ((:author *author*) (author)) footer
         (body (body () "Hello world."))
         (style-sheet (style-sheet "css/css.css")))
   (html5 nil
@@ -100,7 +100,7 @@
            (meta :name "auhtor" :content *author*)
            (meta :name "generator" :content "pages")
            style-sheet)
-         body))
+         body footer))
 
 (defun update ()
   (let ((date (uiop:safe-file-write-date "index.html")))
