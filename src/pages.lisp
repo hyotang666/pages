@@ -3,7 +3,7 @@
 (defpackage :pages
   (:use :cl :htmf)
   (:shadow compile)
-  (:export))
+  (:export #:compile))
 
 (in-package :pages)
 
