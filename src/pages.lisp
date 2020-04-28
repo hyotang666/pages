@@ -116,23 +116,24 @@
     (assert date () "No index.html in curret directory.~&~S" (uiop:getcwd))
     (multiple-value-bind (targets ignored)
         (if force
-            (values (collect-file "src/" *pattern*) nil)
+            (values (sort-by-stamp (collect-file "src/" *pattern*)) nil)
             (should-be-updated date))
       (when targets
         (%%update targets ignored)))))
 
+(defun sort-by-stamp (list)
+  (sort list (complement #'uiop:timestamp<) :key #'file-write-date))
+
 (defun should-be-updated (date)
   (mapc #'ensure-directories-exist '("src/" "archives/" "img/"))
-  (flet ((sort-by-stamp (list)
-           (sort list (complement #'uiop:timestamp<) :key #'file-write-date)))
-    (loop :for pathname :in (collect-file "src/" *pattern*)
-          :when (or (uiop:timestamp< date (uiop:safe-file-write-date pathname))
-                    (not (probe-file (archives pathname))))
-            :collect pathname :into targets
-          :else
-            :collect pathname :into ignored
-          :finally (return
-                    (values (sort-by-stamp targets) (sort-by-stamp ignored))))))
+  (loop :for pathname :in (collect-file "src/" *pattern*)
+        :when (or (uiop:timestamp< date (uiop:safe-file-write-date pathname))
+                  (not (probe-file (archives pathname))))
+          :collect pathname :into targets
+        :else
+          :collect pathname :into ignored
+        :finally (return
+                  (values (sort-by-stamp targets) (sort-by-stamp ignored)))))
 
 (defun archives (pathname)
   (make-pathname :type "html"
