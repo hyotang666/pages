@@ -13,7 +13,6 @@ exec ros -Q -- $0 "$@"
 (in-package :ros.script.pages.3705080296)
 
 (defun main (&rest argv)
-  (declare (ignorable argv))
-  (pages:compile)
+  (pages:compile :force (find "--force" argv :test #'equal))
   )
 ;;; vim: set ft=lisp lisp:
