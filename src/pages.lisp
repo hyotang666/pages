@@ -85,14 +85,14 @@
 (defun compile
        (
         &key ((:author *author*) (author)) ((:pattern *pattern*) "*.md")
-        ((:compiler *compiler*) #'markdown) (css #'compile-css))
+        ((:compiler *compiler*) #'markdown) (css #'compile-css) force)
   (if (not (uiop:string-suffix-p (namestring (uiop:getcwd)) ".github.io/"))
       (warn "Current directory is not github.io repository.~S" (uiop:getcwd))
       (progn
        (unless (probe-file "css/css.css")
          (funcall css))
        (if (probe-file "index.html")
-           (update)
+           (update force)
            (with-output-to ("index.html")
              (template :title "index"))))))
 
@@ -111,11 +111,13 @@
            style-sheet)
          body))
 
-(defun update ()
+(defun update (&optional force)
   (let ((date (uiop:safe-file-write-date "index.html")))
     (assert date () "No index.html in curret directory.~&~S" (uiop:getcwd))
     (multiple-value-bind (targets ignored)
-        (should-be-updated date)
+        (if force
+            (values (collect-file "src/" *pattern*) nil)
+            (should-be-updated date))
       (when targets
         (%%update targets ignored)))))
 
