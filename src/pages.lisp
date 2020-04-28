@@ -51,7 +51,15 @@
   (cl-css:css
     `((h1 :padding 5% :border-bottom #:solid :text-align #:center)
       (h2 :padding 20px :background-color #:ghostwhite)
-      (body :padding-left 7% :padding-right 7%)
+      (h3 :background-color #:ghostwhite :display #:table :padding #:1%)
+      (body :padding-left
+        7%
+        :padding-right
+        7%
+        :font-family
+        #:monospace
+        :font-size
+        #:1rem)
       ;; Codes
       (pre :padding 10px :background-color #:whitesmoke :overflow #:auto)
       (code :color #:rebeccapurple)
