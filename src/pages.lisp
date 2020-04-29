@@ -49,29 +49,27 @@
 
 (defun css-thunk ()
   (cl-css:css
-    `((h1 :padding 5% :border-bottom #:solid :text-align #:center)
-      (h2 :padding 20px :background-color #:ghostwhite)
-      (h3 :background-color #:ghostwhite :display #:table :padding #:1%)
-      (body :padding-left
-        7%
-        :padding-right
-        7%
-        :font-family
-        #:monospace
-        :font-size
-        #:1rem)
+    `((:h1 :padding-bottom #:1% :border-bottom #:solid :font-family #:gothic)
+      (:h2 :padding-bottom #:0.5% :padding-top #:0.5% :background-color
+       #:ghostwhite :font-family #:gothic :margin-top #:2%)
+      (:h3 :background-color #:ghostwhite :display #:table :font-family
+       #:gothic)
+      (:body :padding-left #:7% :padding-right #:7% :font-family
+       "\"Noto Sans CJK jp\", \"Liberation Mono\", monospace" :font-size #:1rem
+       :font-weight #:lighter :max-width #:64rem :margin #:auto)
       ;; Codes
-      (pre :padding 10px :background-color #:whitesmoke :overflow #:auto)
-      (code :color #:rebeccapurple)
+      (:pre :padding #:10px :background-color #:whitesmoke :overflow #:auto)
+      (:code :color #:rebeccapurple)
       ;; Tables
-      (table :background-color #:azure)
+      (:table :background-color #:azure)
       ("tbody tr:nth-of-type(odd)" :background-color #:aqua)
-      (,(format nil "~{~A~^,~}" '(td th)) :padding 10px)
+      (,(format nil "~{~A~^,~}" '(td th)) :padding #:10px)
       ;; archives
-      (.archive :border #:solid :border-width #:thin :padding 10px
+      (:.archive :border #:solid :border-width #:thin :padding #:10px
        :border-color #:gray)
       ;; footer
-      (footer :border-top #:solid :border-width #:thin))))
+      (:footer :border-top #:solid :border-width #:thin)
+      (:ul :padding-left #:1.5rem))))
 
 (defun collect-file (directory pattern)
   (uiop:directory-files (merge-pathnames directory (uiop:getcwd)) pattern))
