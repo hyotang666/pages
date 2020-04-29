@@ -117,7 +117,7 @@
     (multiple-value-bind (targets ignored)
         (should-be-updated date)
       (when (or targets force)
-        (%%update targets ignored)))))
+        (%%update targets ignored force)))))
 
 (defun sort-by-stamp (list)
   (sort list (complement #'uiop:timestamp<) :key #'file-write-date))
@@ -140,11 +140,13 @@
                                         :test #'equal)
                  :defaults pathname))
 
-(defun %%update (targets ignored)
+(defun %%update (targets ignored &optional force)
   (labels ((%compile (pathname)
              (with-output-to ((archives pathname))
                (compiler pathname))))
     (mapc #'%compile targets)
+    (when force
+      (mapc #'%compile ignored))
     (loop :for number :upfrom 0
           :for contents
                :on (nconc
