@@ -115,10 +115,8 @@
   (let ((date (uiop:safe-file-write-date "index.html")))
     (assert date () "No index.html in curret directory.~&~S" (uiop:getcwd))
     (multiple-value-bind (targets ignored)
-        (if force
-            (values (sort-by-stamp (collect-file "src/" *pattern*)) nil)
-            (should-be-updated date))
-      (when targets
+        (should-be-updated date)
+      (when (or targets force)
         (%%update targets ignored)))))
 
 (defun sort-by-stamp (list)
