@@ -60,7 +60,9 @@
                    (:body :padding-left #:7% :padding-right #:7% :font-family
                     "\"Noto Sans CJK jp\", \"Liberation Mono\", monospace"
                     :font-size #:1rem :font-weight #:lighter :max-width #:64rem
-                    :margin #:auto)
+                    :margin #:auto :background-image
+                    "url('../img/lisplogo_alien.svg')" :background-repeat
+                    #:no-repeat :background-position #:256rem)
                    ;; Codes
                    (:pre :padding #:10px :background-color #:whitesmoke
                     :overflow #:auto)
