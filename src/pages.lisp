@@ -231,17 +231,20 @@
         (main ()
           (p ()
             (lines-truncate
-              (loop :for element
-                         :across (remove-if
-                                   (lambda (element)
-                                     (or (plump:comment-p element)
-                                         (plump:text-node-p element)))
-                                   (plump:children dom))
-                    :for firstp := t :then nil :when (not firstp)
-                    :nconc (remove ""
-                                   (uiop:split-string (plump:text element)
-                                                      :separator #.(string
-                                                                     #\Newline))))
+              (loop :for element :across (plump:children dom)
+                    :if (not
+                          (or (plump:comment-p element)
+                              (and (plump:element-p element)
+                                   (find (plump:tag-name element)
+                                         '("h1" "h2" "h3" "ul" "ol")
+                                         :test #'equal))
+                              (and (plump:text-node-p element)
+                                   (every #'ppcre::whitespacep
+                                          (plump:text element)))))
+                      :nconc (remove ""
+                                     (uiop:split-string (plump:text element)
+                                                        :separator #.(string
+                                                                       #\Newline))))
               64)))
         (footer ()
           (date (file-write-date pathname))
