@@ -107,7 +107,24 @@
            (meta :charset "UTF-8")
            (meta :name "auhtor" :content *author*)
            (meta :name "generator" :content "pages")
-           (style () colorize:*coloring-css*)
+           (style ()
+             (ppcre:regex-replace "FFBAFF"
+                                  (ppcre:regex-replace "CAFFCA"
+                                                       (ppcre:regex-replace
+                                                         "CACAFF"
+                                                         (ppcre:regex-replace
+                                                           "FFFFBA"
+                                                           (ppcre:regex-replace
+                                                             "FFCACA"
+                                                             (ppcre:regex-replace
+                                                               "BAFFFF"
+                                                               colorize:*coloring-css*
+                                                               "EEFFFF")
+                                                             "FFEEFF")
+                                                           "FFFFEE")
+                                                         "EAEAFF")
+                                                       "EAFFEA")
+                                  "FFDAFF"))
            style-sheet)
          body))
 

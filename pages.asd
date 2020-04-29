@@ -2,7 +2,7 @@
 (in-package :asdf)
 
 (defsystem "pages"
-  :version "1.2.3"
+  :version "1.2.4"
   :pathname "src"
   :depends-on
   (
