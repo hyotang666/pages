@@ -113,16 +113,16 @@
       (progn
        (when (or (not (probe-file "css/css.css")) force)
          (funcall css))
-       (if (probe-file "index.html")
+       (if (probe-file "indexes/index.html")
            (update force)
-           (with-output-to ("index.html")
+           (with-output-to ((ensure-directories-exist "indexes/index.html"))
              (template :title "index"))))))
 
 (defun template
        (
         &key (title "") ((:author *author*) (author))
         (body (body () "Hello world."))
-        (style-sheet (style-sheet "css/css.css")))
+        (style-sheet (style-sheet "../css/css.css")))
   (html5 nil
          (head ()
            (title () title)
@@ -133,7 +133,7 @@
          body))
 
 (defun update (&optional force)
-  (let ((date (uiop:safe-file-write-date "index.html")))
+  (let ((date (uiop:safe-file-write-date "indexes/index.html")))
     (assert date () "No index.html in curret directory.~&~S" (uiop:getcwd))
     (multiple-value-bind (targets ignored)
         (should-be-updated date)
@@ -144,7 +144,7 @@
   (sort list (complement #'uiop:timestamp<) :key #'file-write-date))
 
 (defun should-be-updated (date)
-  (mapc #'ensure-directories-exist '("src/" "archives/" "img/"))
+  (mapc #'ensure-directories-exist '("src/" "archives/" "img/" "indexes/"))
   (loop :for pathname :in (collect-file "src/" *pattern*)
         :when (or (uiop:timestamp< date (uiop:safe-file-write-date pathname))
                   (not (probe-file (archives pathname))))
@@ -176,8 +176,8 @@
                     (mapcar #'index-link ignored))
                :by #'(lambda (list) (nthcdr *max-contents* list))
           :with count := (length contents)
-          :do (with-output-to ((format nil "index~:[~D~;~].html" (zerop number)
-                                       number))
+          :do (with-output-to ((format nil "indexes/index~:[~D~;~].html"
+                                       (zerop number) number))
                 (archives-updater
                  (loop :for content :in contents
                        :repeat *max-contents*
@@ -186,7 +186,9 @@
 
 (defun page-nav (count page)
   (flet ((list-item (page label)
-           (a (list :href (format nil "index~:[~D~;~].html" (zerop page) page)
+           (a (list :href
+                    (format nil "indexes/index~:[~D~;~].html" (zerop page)
+                            page)
                     :class "page-link")
              label))
          (max-page (page)
@@ -213,7 +215,8 @@
             :style-sheet (style-sheet "../css/css.css")
             :body (body ()
                     (main () (funcall *compiler* pathname))
-                    (footer () (a (list :href "../index.html") "Index")))))
+                    (footer ()
+                      (a (list :href "../indexes/index.html") "Index")))))
 
 (defun archives-updater (contents count page)
   (template :title "Index"
