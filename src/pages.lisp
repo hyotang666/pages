@@ -87,7 +87,7 @@
   (if (not (uiop:string-suffix-p (namestring (uiop:getcwd)) ".github.io/"))
       (warn "Current directory is not github.io repository.~S" (uiop:getcwd))
       (progn
-       (unless (probe-file "css/css.css")
+       (when (or (not (probe-file "css/css.css")) force)
          (funcall css))
        (if (probe-file "index.html")
            (update force)
