@@ -250,7 +250,10 @@
       (div ()
         (header ()
           (h2 ()
-            (a (list :href (enough-namestring (archives pathname)))
+            (a (list :href (enough-namestring
+                             (make-pathname :directory '(:relative :up
+                                                         "archives")
+                                            :defaults (archives pathname))))
               (plump:text (elt (clss:select "h1" dom) 0)))))
         (main ()
           (p ()
