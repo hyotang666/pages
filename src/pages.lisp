@@ -186,9 +186,7 @@
 
 (defun page-nav (count page)
   (flet ((list-item (page label)
-           (a (list :href
-                    (format nil "indexes/index~:[~D~;~].html" (zerop page)
-                            page)
+           (a (list :href (format nil "index~:[~D~;~].html" (zerop page) page)
                     :class "page-link")
              label))
          (max-page (page)
