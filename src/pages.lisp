@@ -7,13 +7,21 @@
 
 (in-package :pages)
 
+(declaim (optimize speed))
+
 ;;;; SPECIAL VARIABLES
+
+(declaim (type simple-string *author* *pattern*))
 
 (defvar *author*)
 
+(defvar *pattern*)
+
+(declaim (type function *compiler*))
+
 (defvar *compiler*)
 
-(defvar *pattern*)
+(declaim (type (unsigned-byte 8) *max-contents*))
 
 (defparameter *max-contents* 8)
 
@@ -21,6 +29,7 @@
 
 (defun author ()
   (let ((namestring (car (last (pathname-directory (uiop:getcwd))))))
+    (declare (type simple-string namestring))
     (subseq namestring 0 (position #\. namestring))))
 
 ;;;; COMPILER
@@ -105,32 +114,30 @@
     (format nil "~D/~D/~D" year month day)))
 
 (defun compile
-       (
-        &key ((:author *author*) (author)) ((:pattern *pattern*) "*.md")
+       (&key ((:author *author*) (author)) ((:pattern *pattern*) "*.md")
         ((:compiler *compiler*) #'markdown) (css #'compile-css) force)
   (if (not (uiop:string-suffix-p (namestring (uiop:getcwd)) ".github.io/"))
       (warn "Current directory is not github.io repository.~S" (uiop:getcwd))
       (progn
        (when (or (not (probe-file "css/css.css")) force)
-         (funcall css))
+         (funcall (coerce css 'function)))
        (if (probe-file "indexes/index.html")
            (update force)
            (with-output-to ((ensure-directories-exist "indexes/index.html"))
              (template :title "index"))))))
 
 (defun template
-       (
-        &key (title "") ((:author *author*) (author))
+       (&key (title "") ((:author *author*) (author))
         (body (body () "Hello world."))
         (style-sheet (style-sheet "../css/css.css")))
-  (html5 nil
-         (head ()
-           (title () title)
-           (meta :charset "UTF-8")
-           (meta :name "auhtor" :content *author*)
-           (meta :name "generator" :content "pages")
-           style-sheet)
-         body))
+  (html5 ()
+    (head ()
+      (title () title)
+      (meta :charset "UTF-8")
+      (meta :name "auhtor" :content *author*)
+      (meta :name "generator" :content "pages")
+      style-sheet)
+    body))
 
 (defun update (&optional force)
   (let ((date (uiop:safe-file-write-date "indexes/index.html")))
@@ -140,8 +147,10 @@
       (when (or targets force)
         (%%update targets ignored force)))))
 
+(declaim (ftype (function (list) (values list &optional)) sort-by-stamp))
+
 (defun sort-by-stamp (list)
-  (sort list (complement #'uiop:timestamp<) :key #'file-write-date))
+  (sort list (lambda (a b) (not (uiop:timestamp< a b))) :key #'file-write-date))
 
 (defun should-be-updated (date)
   (mapc #'ensure-directories-exist '("src/" "archives/" "img/" "indexes/"))
@@ -168,21 +177,26 @@
     (mapc #'%compile targets)
     (when force
       (mapc #'%compile ignored))
-    (loop :for number :upfrom 0
+    (loop :for number :of-type (integer 0 #.most-positive-fixnum) :upfrom 0
           :for contents
                :on (nconc
-                    (mapcar (lambda (pathname) (index-link pathname t))
-                            targets)
-                    (mapcar #'index-link ignored))
+                     (mapcar (lambda (pathname) (index-link pathname t))
+                             targets)
+                     (mapcar #'index-link ignored))
                :by #'(lambda (list) (nthcdr *max-contents* list))
           :with count := (length contents)
           :do (with-output-to ((format nil "indexes/index~:[~D~;~].html"
                                        (zerop number) number))
                 (archives-updater
-                 (loop :for content :in contents
-                       :repeat *max-contents*
-                       :collect content)
-                 count number)))))
+                  (loop :for content :in contents
+                        :repeat *max-contents*
+                        :collect content)
+                  count number)))))
+
+(declaim
+ (ftype (function ((unsigned-byte 8) (unsigned-byte 8))
+         (values (or null function) &optional))
+        page-nav))
 
 (defun page-nav (count page)
   (flet ((list-item (page label)
@@ -200,7 +214,7 @@
       (unless (<= count *max-contents*)
         (footer ()
           (nav '(:aria-label "Pagination.")
-            (loop :for i :upfrom (1+ page)
+            (loop :for i :of-type (mod #.most-positive-fixnum) :upfrom (1+ page)
                   :repeat (max-page page)
                   :collect (list-item i i) :into as
                   :finally (return
@@ -220,11 +234,16 @@
   (template :title "Index"
             :body (body () (ul () contents) (page-nav count page))))
 
+(declaim
+ (ftype (function (list (integer 3 #.most-positive-fixnum))
+         (values list &optional))
+        lines-truncate))
+
 (defun lines-truncate (lines max)
-  (check-type max (integer 3 *))
-  (loop :for line :in lines
+  (loop :for line :of-type simple-string :in lines
         :for length := (length line)
-        :for count := length :then (+ count length)
+        :for count :of-type (mod #.most-positive-fixnum) := length
+             :then (+ count length)
         :if (= count max)
           :collect line
           :and :do (loop-finish)
@@ -238,12 +257,15 @@
           :collect (let ((temp
                           (make-string (- max (- count length))
                                        :initial-element #\.)))
+                     ;; due to not simple-base-string
+                     (declare (optimize (speed 1)))
                      (replace temp line :end2 (- max (- count length) 3))
                      temp)
           :and :do (loop-finish)))
 
 (defun index-link (pathname &optional updated)
-  (let* ((dom (plump:parse (funcall (funcall *compiler* pathname)))))
+  (let* ((dom
+          (plump:parse (funcall (the function (funcall *compiler* pathname))))))
     (li ()
       (div ()
         (header ()
@@ -256,20 +278,23 @@
         (main ()
           (p ()
             (lines-truncate
-              (loop :for element :across (plump:children dom)
-                    :if (not
-                          (or (plump:comment-p element)
-                              (and (plump:element-p element)
-                                   (find (plump:tag-name element)
-                                         '("h1" "h2" "h3" "ul" "ol")
-                                         :test #'equal))
-                              (and (plump:text-node-p element)
-                                   (every #'ppcre::whitespacep
-                                          (plump:text element)))))
-                      :nconc (remove ""
-                                     (uiop:split-string (plump:text element)
-                                                        :separator #.(string
-                                                                       #\Newline))))
+              (locally
+               ;; Due to plump return fill pointer array.
+               (declare (optimize (speed 1)))
+               (loop :for element :across (plump:children dom)
+                     :if (not
+                           (or (plump:comment-p element)
+                               (and (plump:element-p element)
+                                    (find (plump:tag-name element)
+                                          '("h1" "h2" "h3" "ul" "ol")
+                                          :test #'equal))
+                               (and (plump:text-node-p element)
+                                    (every #'ppcre::whitespacep
+                                           (plump:text element)))))
+                       :nconc (remove ""
+                                      (uiop:split-string (plump:text element)
+                                                         :separator #.(string
+                                                                        #\Newline)))))
               64)))
         (footer ()
           (date (file-write-date pathname))
