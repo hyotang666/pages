@@ -193,6 +193,9 @@
                         :collect content)
                   count number)))))
 
+(eval-when (:compile-toplevel :load-toplevel)
+  (pushnew :aria-label *optional-attributes*))
+
 (declaim
  (ftype (function ((unsigned-byte 8) (unsigned-byte 8))
          (values (or null function) &optional))
@@ -210,17 +213,16 @@
                   (if (zerop rem)
                       (1- num)
                       num)))))
-    (let ((*optional-attributes* '(:aria-label)))
-      (unless (<= count *max-contents*)
-        (footer ()
-          (nav '(:aria-label "Pagination.")
-            (loop :for i :of-type (mod #.most-positive-fixnum) :upfrom (1+ page)
-                  :repeat (max-page page)
-                  :collect (list-item i i) :into as
-                  :finally (return
-                            (if (zerop page)
-                                as
-                                (cons (list-item (1- page) "<") as))))))))))
+    (unless (<= count *max-contents*)
+      (footer ()
+        (nav '(:aria-label "Pagination.")
+          (loop :for i :of-type (mod #.most-positive-fixnum) :upfrom (1+ page)
+                :repeat (max-page page)
+                :collect (list-item i i) :into as
+                :finally (return
+                          (if (zerop page)
+                              as
+                              (cons (list-item (1- page) "<") as)))))))))
 
 (defun compiler (pathname)
   (template :title (pathname-name pathname)
