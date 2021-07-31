@@ -133,9 +133,9 @@
   (html5 ()
     (head ()
       (title () title)
-      (meta :charset "UTF-8")
-      (meta :name "auhtor" :content *author*)
-      (meta :name "generator" :content "pages")
+      (meta '(:charset "UTF-8"))
+      (meta `(:name "auhtor" :content ,*author*))
+      (meta '(:name "generator" :content "pages"))
       style-sheet)
     body))
 
@@ -249,7 +249,7 @@
           :and :do (loop-finish)
         :else :if (< count max)
           :collect line
-          :and :collect (br)
+          :and :collect (br nil)
         :else :if (<= (- max (- count length)) 3)
           :collect "..."
           :and :do (loop-finish)
@@ -301,4 +301,5 @@
           (when updated
             " Updated!"))))))
 
-(defun style-sheet (path) (link :rel "stylesheet" :href path :type "text/css"))
+(defun style-sheet (path)
+  (link `(:rel "stylesheet" :href ,path :type "text/css")))
