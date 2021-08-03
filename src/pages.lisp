@@ -40,8 +40,7 @@
     (let ((3bmd-code-blocks:*code-blocks* t)
           (3bmd-tables:*tables* t)
           (3bmd:*smart-quotes* t))
-      (with-output-to-string (out)
-        (3bmd:parse-and-print-to-stream pathname out)))))
+      (3bmd:parse-and-print-to-stream pathname *standard-output*))))
 
 ;;; CSS
 
@@ -234,8 +233,10 @@
           :and :do (loop-finish)))
 
 (defun index-link (pathname &optional updated)
-  (let* ((dom
-          (plump:parse (funcall (the function (funcall *compiler* pathname))))))
+  (let ((dom
+         (plump:parse
+           (with-output-to-string (*standard-output*)
+             (funcall (the function (funcall *compiler* pathname)))))))
     (li ()
       (div ()
         (header ()

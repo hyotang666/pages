@@ -2,7 +2,7 @@
 (in-package :asdf)
 
 (defsystem "pages"
-  :version "1.2.17"
+  :version "1.2.18"
   :pathname "src"
   :author "SATO Shinichi"
   :license "MIT"
