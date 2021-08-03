@@ -125,9 +125,6 @@
 ;;;; UPDATE
 ;;; COMPILER
 
-(eval-when (:compile-toplevel :load-toplevel)
-  (pushnew :aria-label *optional-attributes*))
-
 (defun compiler (pathname)
   (template :title (pathname-name pathname)
             :style-sheet (style-sheet "../css/css.css")
