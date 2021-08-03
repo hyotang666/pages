@@ -45,17 +45,6 @@
 
 ;;; CSS
 
-(defmacro with-output-to ((pathname) &body body)
-  `(with-open-file (*standard-output* ,pathname :direction :output
-                    :if-does-not-exist :create
-                    :if-exists :supersede)
-     (write-string ,@body)))
-
-(defun compile-css ()
-  (ensure-directories-exist "css/")
-  (with-output-to ("css/css.css")
-    (css-thunk)))
-
 (defun css-thunk ()
   (concatenate 'string
                (cl-css:css
@@ -104,27 +93,21 @@
                                                          "EAFFEA")
                                     "FFDAFF")))
 
-(defun collect-file (directory pattern)
-  (uiop:directory-files (merge-pathnames directory (uiop:getcwd)) pattern))
+(defmacro with-output-to ((pathname) &body body)
+  `(with-open-file (*standard-output* ,pathname :direction :output
+                    :if-does-not-exist :create
+                    :if-exists :supersede)
+     (write-string ,@body)))
 
-(defun date (time)
-  (multiple-value-bind (s m h day month year)
-      (decode-universal-time time)
-    (declare (ignore s m h))
-    (format nil "~D/~D/~D" year month day)))
+(defun compile-css ()
+  (ensure-directories-exist "css/")
+  (with-output-to ("css/css.css")
+    (css-thunk)))
 
-(defun compile
-       (&key ((:author *author*) (author)) ((:pattern *pattern*) "*.md")
-        ((:compiler *compiler*) #'markdown) (css #'compile-css) force)
-  (if (not (uiop:string-suffix-p (namestring (uiop:getcwd)) ".github.io/"))
-      (warn "Current directory is not github.io repository.~S" (uiop:getcwd))
-      (progn
-       (when (or (not (probe-file "css/css.css")) force)
-         (funcall (coerce css 'function)))
-       (if (probe-file "indexes/index.html")
-           (update force)
-           (with-output-to ((ensure-directories-exist "indexes/index.html"))
-             (template :title "index"))))))
+;;;; TEMPLATE
+
+(defun style-sheet (path)
+  (link `(:rel "stylesheet" :href ,path :type "text/css")))
 
 (defun template
        (&key (title "") ((:author *author*) (author))
@@ -139,13 +122,38 @@
       style-sheet)
     body))
 
-(defun update (&optional force)
-  (let ((date (uiop:safe-file-write-date "indexes/index.html")))
-    (assert date () "No index.html in curret directory.~&~S" (uiop:getcwd))
-    (multiple-value-bind (targets ignored)
-        (should-be-updated date)
-      (when (or targets force)
-        (%%update targets ignored force)))))
+;;;; UPDATE
+;;; COMPILER
+
+(eval-when (:compile-toplevel :load-toplevel)
+  (pushnew :aria-label *optional-attributes*))
+
+(defun compiler (pathname)
+  (template :title (pathname-name pathname)
+            :style-sheet (style-sheet "../css/css.css")
+            :body (body ()
+                    (main () (funcall *compiler* pathname))
+                    (footer ()
+                      (a (list :href "../indexes/index.html") "Index")))))
+
+;;; %UPDATE
+;; SHOULD-BE-UPDATED
+
+(defun collect-file (directory pattern)
+  (uiop:directory-files (merge-pathnames directory (uiop:getcwd)) pattern))
+
+(defun date (time)
+  (multiple-value-bind (s m h day month year)
+      (decode-universal-time time)
+    (declare (ignore s m h))
+    (format nil "~D/~D/~D" year month day)))
+
+(defun archives (pathname)
+  (make-pathname :type "html"
+                 :directory (substitute "archives" "src"
+                                        (pathname-directory pathname)
+                                        :test #'equal)
+                 :defaults pathname))
 
 (declaim (ftype (function (list) (values list &optional)) sort-by-stamp))
 
@@ -163,38 +171,7 @@
         :finally (return
                   (values (sort-by-stamp targets) (sort-by-stamp ignored)))))
 
-(defun archives (pathname)
-  (make-pathname :type "html"
-                 :directory (substitute "archives" "src"
-                                        (pathname-directory pathname)
-                                        :test #'equal)
-                 :defaults pathname))
-
-(defun %%update (targets ignored &optional force)
-  (labels ((%compile (pathname)
-             (with-output-to ((archives pathname))
-               (compiler pathname))))
-    (mapc #'%compile targets)
-    (when force
-      (mapc #'%compile ignored))
-    (loop :for number :of-type (integer 0 #.most-positive-fixnum) :upfrom 0
-          :for contents
-               :on (nconc
-                     (mapcar (lambda (pathname) (index-link pathname t))
-                             targets)
-                     (mapcar #'index-link ignored))
-               :by #'(lambda (list) (nthcdr *max-contents* list))
-          :with count := (length contents)
-          :do (with-output-to ((format nil "indexes/index~:[~D~;~].html"
-                                       (zerop number) number))
-                (archives-updater
-                  (loop :for content :in contents
-                        :repeat *max-contents*
-                        :collect content)
-                  count number)))))
-
-(eval-when (:compile-toplevel :load-toplevel)
-  (pushnew :aria-label *optional-attributes*))
+;; ARCHIVES-UPDATER
 
 (declaim
  (ftype (function ((unsigned-byte 8) (unsigned-byte 8))
@@ -224,17 +201,11 @@
                               as
                               (cons (list-item (1- page) "<") as)))))))))
 
-(defun compiler (pathname)
-  (template :title (pathname-name pathname)
-            :style-sheet (style-sheet "../css/css.css")
-            :body (body ()
-                    (main () (funcall *compiler* pathname))
-                    (footer ()
-                      (a (list :href "../indexes/index.html") "Index")))))
-
 (defun archives-updater (contents count page)
   (template :title "Index"
             :body (body () (ul () contents) (page-nav count page))))
+
+;; INDEX-LINK
 
 (declaim
  (ftype (function (list (integer 3 #.most-positive-fixnum))
@@ -303,5 +274,48 @@
           (when updated
             " Updated!"))))))
 
-(defun style-sheet (path)
-  (link `(:rel "stylesheet" :href ,path :type "text/css")))
+(defun %%update (targets ignored &optional force)
+  (labels ((%compile (pathname)
+             (with-output-to ((archives pathname))
+               (compiler pathname))))
+    (mapc #'%compile targets)
+    (when force
+      (mapc #'%compile ignored))
+    (loop :for number :of-type (integer 0 #.most-positive-fixnum) :upfrom 0
+          :for contents
+               :on (nconc
+                     (mapcar (lambda (pathname) (index-link pathname t))
+                             targets)
+                     (mapcar #'index-link ignored))
+               :by #'(lambda (list) (nthcdr *max-contents* list))
+          :with count := (length contents)
+          :do (with-output-to ((format nil "indexes/index~:[~D~;~].html"
+                                       (zerop number) number))
+                (archives-updater
+                  (loop :for content :in contents
+                        :repeat *max-contents*
+                        :collect content)
+                  count number)))))
+
+(defun update (&optional force)
+  (let ((date (uiop:safe-file-write-date "indexes/index.html")))
+    (assert date () "No index.html in curret directory.~&~S" (uiop:getcwd))
+    (multiple-value-bind (targets ignored)
+        (should-be-updated date)
+      (when (or targets force)
+        (%%update targets ignored force)))))
+
+;;;; COMPILE
+
+(defun compile
+       (&key ((:author *author*) (author)) ((:pattern *pattern*) "*.md")
+        ((:compiler *compiler*) #'markdown) (css #'compile-css) force)
+  (if (not (uiop:string-suffix-p (namestring (uiop:getcwd)) ".github.io/"))
+      (warn "Current directory is not github.io repository.~S" (uiop:getcwd))
+      (progn
+       (when (or (not (probe-file "css/css.css")) force)
+         (funcall (coerce css 'function)))
+       (if (probe-file "indexes/index.html")
+           (update force)
+           (with-output-to ((ensure-directories-exist "indexes/index.html"))
+             (template :title "index"))))))
