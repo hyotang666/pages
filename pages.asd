@@ -4,6 +4,11 @@
 (defsystem "pages"
   :version "1.2.17"
   :pathname "src"
+  :author "SATO Shinichi"
+  :license "MIT"
+  :source-control (:git "git@github.com:hyotang666/pages")
+  :bug-tracker "https://github.com/hyotang666/pages/issues"
+  :description "Static site generator especially for github pages."
   :depends-on
   (
    "markup-functions" ; HTML templates.
