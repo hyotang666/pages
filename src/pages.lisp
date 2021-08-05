@@ -44,53 +44,49 @@
 
 ;;; CSS
 
-(defun css-thunk ()
-  (concatenate 'string
-               (cl-css:css
-                 `((:h1 :padding-bottom #:1% :border-bottom #:solid
-                    :font-family #:gothic)
-                   (:h2 :padding-bottom #:0.5% :padding-top #:0.5%
-                    :background-color #:ghostwhite :font-family #:gothic
-                    :margin-top #:2%)
-                   (:h3 :background-color #:ghostwhite :display #:table
-                    :font-family #:gothic)
-                   (:body :padding-left #:7% :padding-right #:7% :font-family
-                    "\"Noto Sans CJK jp\", \"Liberation Mono\", monospace"
-                    :font-size #:1rem :font-weight #:lighter :max-width #:64rem
-                    :margin #:auto :background-image
-                    "url('../img/lisplogo_alien.svg')" :background-repeat
-                    #:no-repeat :background-position #:256rem)
-                   ;; Codes
-                   (:pre :padding #:10px :background-color #:whitesmoke
-                    :overflow #:auto)
-                   (:code :color #:rebeccapurple)
-                   ;; Tables
-                   (:table :background-color #:azure)
-                   ("tbody tr:nth-of-type(odd)" :background-color #:aqua)
-                   (,(format nil "~{~A~^,~}" '(td th)) :padding #:10px)
-                   ;; archives
-                   (:.archive :border #:solid :border-width #:thin :padding
-                    #:10px :border-color #:gray)
-                   ;; footer
-                   (:footer :border-top #:solid :border-width #:thin)
-                   (:ul :padding-left #:1.5rem)))
-               (ppcre:regex-replace "FFBAFF"
-                                    (ppcre:regex-replace "CAFFCA"
-                                                         (ppcre:regex-replace
-                                                           "CACAFF"
-                                                           (ppcre:regex-replace
-                                                             "FFFFBA"
-                                                             (ppcre:regex-replace
-                                                               "FFCACA"
-                                                               (ppcre:regex-replace
-                                                                 "BAFFFF"
-                                                                 colorize:*coloring-css*
-                                                                 "EEFFFF")
-                                                               "FFEEFF")
-                                                             "FFFFEE")
-                                                           "EAEAFF")
-                                                         "EAFFEA")
-                                    "FFDAFF")))
+(let* ((before '("FFBAFF" "CAFFCA" "CACAFF" "FFFFBA" "FFCACA" "BAFFFF"))
+       (after '("FFDAFF" "EAFFEA" "EAEAFF" "FFFFEE" "FFEEFF" "EEFFFF"))
+       (ht (make-hash-table :test #'equal)))
+  (mapc (lambda (k v) (setf (gethash k ht) v)) before after)
+  (flet ((replacer (match emitter)
+           (funcall emitter
+                    (or (gethash match ht)
+                        (error "Internal error: Matches are exhausted. ~S"
+                               match)))))
+    (declare (ftype (function (simple-string function) t) replacer))
+    (defun css-thunk ()
+      (concatenate 'string
+                   (cl-css:css
+                     `((:h1 :padding-bottom #:1% :border-bottom #:solid
+                        :font-family #:gothic)
+                       (:h2 :padding-bottom #:0.5% :padding-top #:0.5%
+                        :background-color #:ghostwhite :font-family #:gothic
+                        :margin-top #:2%)
+                       (:h3 :background-color #:ghostwhite :display #:table
+                        :font-family #:gothic)
+                       (:body :padding-left #:7% :padding-right #:7%
+                        :font-family
+                        "\"Noto Sans CJK jp\", \"Liberation Mono\", monospace"
+                        :font-size #:1rem :font-weight #:lighter :max-width
+                        #:64rem :margin #:auto :background-image
+                        "url('../img/lisplogo_alien.svg')" :background-repeat
+                        #:no-repeat :background-position #:256rem)
+                       ;; Codes
+                       (:pre :padding #:10px :background-color #:whitesmoke
+                        :overflow #:auto)
+                       (:code :color #:rebeccapurple)
+                       ;; Tables
+                       (:table :background-color #:azure)
+                       ("tbody tr:nth-of-type(odd)" :background-color #:aqua)
+                       (,(format nil "~{~A~^,~}" '(td th)) :padding #:10px)
+                       ;; archives
+                       (:.archive :border #:solid :border-width #:thin :padding
+                        #:10px :border-color #:gray)
+                       ;; footer
+                       (:footer :border-top #:solid :border-width #:thin)
+                       (:ul :padding-left #:1.5rem)))
+                   (uiop:frob-substrings colorize:*coloring-css* before
+                                         #'replacer)))))
 
 (defmacro with-output-to ((pathname) &body body)
   `(with-open-file (*standard-output* ,pathname :direction :output
@@ -260,8 +256,11 @@
                                           '("h1" "h2" "h3" "ul" "ol")
                                           :test #'equal))
                                (and (plump:text-node-p element)
-                                    (every #'ppcre::whitespacep
-                                           (plump:text element)))))
+                                    (every
+                                      (lambda (c)
+                                        (find c plump-parser::*whitespace*
+                                              :test #'char=))
+                                      (plump:text element)))))
                        :nconc (remove ""
                                       (uiop:split-string (plump:text element)
                                                          :separator #.(string
