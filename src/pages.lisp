@@ -55,36 +55,7 @@
                                match)))))
     (declare (ftype (function (simple-string function) t) replacer))
     (defun css-thunk ()
-      (concatenate 'string
-                   (cl-css:css
-                     `((:h1 :padding-bottom #:1% :border-bottom #:solid
-                        :font-family #:gothic)
-                       (:h2 :padding-bottom #:0.5% :padding-top #:0.5%
-                        :background-color #:ghostwhite :font-family #:gothic
-                        :margin-top #:2%)
-                       (:h3 :background-color #:ghostwhite :display #:table
-                        :font-family #:gothic)
-                       (:body :padding-left #:7% :padding-right #:7%
-                        :font-family
-                        "\"Noto Sans CJK jp\", \"Liberation Mono\", monospace"
-                        :font-size #:1rem :font-weight #:lighter :max-width
-                        #:64rem :margin #:auto :background-image
-                        "url('../img/lisplogo_alien.svg')" :background-repeat
-                        #:no-repeat :background-position #:256rem)
-                       ;; Codes
-                       (:pre :padding #:10px :background-color #:whitesmoke
-                        :overflow #:auto)
-                       (:code :color #:rebeccapurple)
-                       ;; Tables
-                       (:table :background-color #:azure)
-                       ("tbody tr:nth-of-type(odd)" :background-color #:aqua)
-                       (,(format nil "~{~A~^,~}" '(td th)) :padding #:10px)
-                       ;; archives
-                       (:.archive :border #:solid :border-width #:thin :padding
-                        #:10px :border-color #:gray)
-                       ;; footer
-                       (:footer :border-top #:solid :border-width #:thin)
-                       (:ul :padding-left #:1.5rem)))
+      (concatenate 'string (cl-css:css nil)
                    (uiop:frob-substrings colorize:*coloring-css* before
                                          #'replacer)))))
 
@@ -114,6 +85,9 @@
       (meta '(:charset "UTF-8"))
       (meta `(:name "auhtor" :content ,*author*))
       (meta '(:name "generator" :content "pages"))
+      (link
+        '(:rel :stylesheet :href
+          "https://unpkg.com/@picocss/pico@latest/css/pico.min.css"))
       style-sheet)
     body))
 
