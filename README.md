@@ -22,10 +22,10 @@ JEKYLL IS STRONGLY RECOMENDED.
 ### License
 MIT
 ### Developed with
-SBCL/1.3.17
+SBCL
 ### Tested with
 none
 ### Not supported.
-CLISP - Pages depends on 3bmd, and 3bmd does not work on clisp.
+
 ## Installation
 TODO
