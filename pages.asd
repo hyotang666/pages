@@ -11,14 +11,14 @@
   :description "Static site generator especially for github pages."
   :depends-on
   (
-   "markup-functions" ; HTML templates.
-   "plump" ; HTML parser.
-   "clss" ; CSS like selector for plump-dom.
+   "uiop"               ; Utilities, implicitly depends on via asdf.
    "3bmd" "3bmd-ext-code-blocks" "3bmd-ext-tables" ; Markdown parser.
-   "cl-css" ; CSS compiler.
-   "uiop" ; Utilities.
-   "colorize"   ; Syntax highlighting, implicitly depends on via 3bmd-ext-code-blocks.
-   "query-repl" ; User query.
+   "markup-functions"   ; HTML templates.
+   "plump"              ; HTML parser.
+   "clss"               ; CSS like selector for plump-dom.
+   "cl-css"             ; CSS compiler.
+   "colorize"           ; Syntax highlighting, implicitly depends on via 3bmd-ext-code-blocks.
+   "query-repl"         ; User query.
    )
   :components
   ((:file "pages")))
