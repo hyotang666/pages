@@ -2,7 +2,7 @@
 (in-package :asdf)
 
 (defsystem "pages"
-  :version "1.2.20"
+  :version "1.3.0"
   :pathname "src"
   :author "SATO Shinichi"
   :license "MIT"
@@ -17,6 +17,8 @@
    "3bmd" "3bmd-ext-code-blocks" "3bmd-ext-tables" ; Markdown parser.
    "cl-css" ; CSS compiler.
    "uiop" ; Utilities.
+   "colorize"   ; Syntax highlighting, implicitly depends on via 3bmd-ext-code-blocks.
+   "query-repl" ; User query.
    )
   :components
   ((:file "pages")))

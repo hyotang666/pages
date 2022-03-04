@@ -25,6 +25,36 @@
 
 (defparameter *max-contents* 8)
 
+(defun get-hyperspec-pathname ()
+  (let ((hyperspec-cache
+         (merge-pathnames "cache"
+                          (asdf:system-source-directory
+                            (asdf:find-system :pages)))))
+    (if (probe-file hyperspec-cache)
+        (uiop:read-file-form hyperspec-cache)
+        (with-open-file (out hyperspec-cache :direction :output
+                         :if-does-not-exist :create
+                         :if-exists :error)
+          (print (find-hyperspec-directory) out)))))
+
+(defun find-hyperspec-directory ()
+  (let ((posibilities
+         (with-input-from-string
+             (in
+              (uiop:run-program "find / -type d -name 'hyperspec'"
+                                :output :string
+                                :ignore-error-status t))
+           (uiop:slurp-stream-lines in))))
+    (declare (list posibilities))
+    (case (length posibilities)
+      (0
+       (warn
+         "Missing hyperspec directory.~[~; ~:@_Hint: sudo apt install hyperspec~]"
+         (uiop:featurep :linux))
+       clhs-lookup::*hyperspec-pathname*)
+      (1 (truename (car posibilities)))
+      (otherwise (truename (query-repl:select posibilities))))))
+
 ;;;; AUTHOR
 
 (defun author ()
@@ -37,9 +67,13 @@
 
 (defun markdown (pathname)
   (lambda ()
-    (let ((3bmd-code-blocks:*code-blocks* t)
-          (3bmd-tables:*tables* t)
-          (3bmd:*smart-quotes* t))
+    (let* ((3bmd-code-blocks:*code-blocks* t)
+           (3bmd-tables:*tables* t)
+           (3bmd:*smart-quotes* t)
+           (clhs-lookup::*hyperspec-pathname* (get-hyperspec-pathname))
+           (clhs-lookup::*hyperspec-map-file*
+            (merge-pathnames "Data/Map_Sym.txt"
+                             clhs-lookup::*hyperspec-pathname*)))
       (3bmd:parse-and-print-to-stream pathname *standard-output*))))
 
 ;;; CSS
