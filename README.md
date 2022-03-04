@@ -2,6 +2,10 @@
 ## What is this?
 HTML Compiler for managing github pages.
 
+## Alternatives
+
+* [coleslaw]
+
 ## Usage
 
 ```shell
@@ -29,3 +33,8 @@ none
 
 ## Installation
 TODO
+
+<!-- Links -->
+
+[coleslaw]:https://github.com/coleslaw-org/coleslaw
+
