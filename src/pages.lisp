@@ -73,7 +73,8 @@
            (clhs-lookup::*hyperspec-pathname* (get-hyperspec-pathname))
            (clhs-lookup::*hyperspec-map-file*
             (merge-pathnames "Data/Map_Sym.txt"
-                             clhs-lookup::*hyperspec-pathname*)))
+                             clhs-lookup::*hyperspec-pathname*))
+           (*trace-output* (make-broadcast-stream)))
       (3bmd:parse-and-print-to-stream pathname *standard-output*))))
 
 ;;; CSS
